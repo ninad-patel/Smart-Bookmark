@@ -40,16 +40,17 @@ export default function Home() {
   useEffect(() => {
     if (!session?.user) return;
     const fetchBookmarks = async () => {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from(DATABASE.TABLES.BOOKMARKS)
         .select('*')
         .order(DATABASE.COLUMNS.CREATED_AT, { ascending: false });
-
       if (error) {
         console.error(MESSAGES.LOADING, error);
       } else {
         setBookmarks(data || []);
       }
+      setIsLoading(false);
     };
 
     fetchBookmarks();
@@ -77,12 +78,14 @@ export default function Home() {
         }
       )
       .subscribe()
+    fetchBookmarks();
     return () => {
       supabase.removeChannel(channel);
     };
   }, [session?.user]);
 
   const handleAddBookmark = async (title: string, url: string) => {
+    setIsLoading(true);
     const { error } = await supabase.from(DATABASE.TABLES.BOOKMARKS).insert([
       {
         title,
@@ -90,13 +93,16 @@ export default function Home() {
         user_id: session?.user.id,
       },
     ]);
+    setIsLoading(false);
     if (error) {
       throw error;
     }
   };
 
   const handleDeleteBookmark = async (id: string) => {
+    setIsLoading(true);
     const { error } = await supabase.from(DATABASE.TABLES.BOOKMARKS).delete().eq(DATABASE.COLUMNS.ID, id);
+    setIsLoading(false);
     if (error) {
       throw error;
     }
