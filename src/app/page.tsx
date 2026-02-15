@@ -8,6 +8,7 @@ import type { Bookmark } from '@/types/bookmark';
 import Header from '@/components/Header';
 import AddBookmarkForm from '@/components/AddBookmarkForm';
 import BookmarkCard from '@/components/BookmarkCard';
+import {ROUTES, DATABASE, MESSAGES, HEADINGS} from '@/constants';
 
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null);
@@ -19,7 +20,7 @@ export default function Home() {
     const init = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        router.replace('/login');
+        router.replace(ROUTES.LOGIN);
       } else {
         setSession(session);
       }
@@ -28,7 +29,7 @@ export default function Home() {
     init();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
-        router.replace('/login');
+        router.replace(ROUTES.LOGIN);
       } else {
         setSession(session);
       }
@@ -40,12 +41,12 @@ export default function Home() {
     if (!session?.user) return;
     const fetchBookmarks = async () => {
       const { data, error } = await supabase
-        .from('bookmarks')
+        .from(DATABASE.TABLES.BOOKMARKS)
         .select('*')
-        .order('created_at', { ascending: false });
+        .order(DATABASE.COLUMNS.CREATED_AT, { ascending: false });
 
       if (error) {
-        console.error('Error fetching bookmarks:', error);
+        console.error(MESSAGES.LOADING, error);
       } else {
         setBookmarks(data || []);
       }
@@ -54,21 +55,21 @@ export default function Home() {
     fetchBookmarks();
 
     const channel = supabase
-      .channel('bookmarks-changes')
+      .channel(DATABASE.CHANNELS.BOOKMARKS_CHANGES)
       .on(
         'postgres_changes',
         {
-          event: '*',
-          schema: 'public',
-          table: 'bookmarks',
-          filter: `user_id=eq.${session?.user.id}`,
+          event: DATABASE.EVENTS.ALL,
+          schema: DATABASE.SCHEMA,
+          table: DATABASE.TABLES.BOOKMARKS,
+          filter: `${DATABASE.COLUMNS.USER_ID}=eq.${session?.user.id}`,
         },
         (payload) => {
-          if (payload.eventType === 'INSERT') {
+          if (payload.eventType === DATABASE.EVENTS.INSERT) {
             setBookmarks((prev) => [payload.new as Bookmark, ...prev]);
-          } else if (payload.eventType === 'DELETE') {
+          } else if (payload.eventType === DATABASE.EVENTS.DELETE) {
             setBookmarks((prev) => prev.filter((b) => b.id !== payload.old.id));
-          } else if (payload.eventType === 'UPDATE') {
+          } else if (payload.eventType === DATABASE.EVENTS.UPDATE) {
             setBookmarks((prev) =>
               prev.map((b) => (b.id === payload.new.id ? (payload.new as Bookmark) : b))
             );
@@ -82,7 +83,7 @@ export default function Home() {
   }, [session?.user]);
 
   const handleAddBookmark = async (title: string, url: string) => {
-    const { error } = await supabase.from('bookmarks').insert([
+    const { error } = await supabase.from(DATABASE.TABLES.BOOKMARKS).insert([
       {
         title,
         url,
@@ -95,7 +96,7 @@ export default function Home() {
   };
 
   const handleDeleteBookmark = async (id: string) => {
-    const { error } = await supabase.from('bookmarks').delete().eq('id', id);
+    const { error } = await supabase.from(DATABASE.TABLES.BOOKMARKS).delete().eq(DATABASE.COLUMNS.ID, id);
     if (error) {
       throw error;
     }
@@ -110,7 +111,7 @@ export default function Home() {
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600">{MESSAGES.LOADING}</p>
         </div>
       </div>
     );
@@ -122,15 +123,15 @@ export default function Home() {
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="mb-8 rounded-2xl bg-white p-6 shadow-lg border border-gray-100">
-          <h2 className="mb-4 text-xl font-bold text-gray-800">Add New Bookmark</h2>
+          <h2 className="mb-4 text-xl font-bold text-gray-800">{HEADINGS.ADD_NEW_BOOKMARK}</h2>
           <AddBookmarkForm onAdd={handleAddBookmark} />
         </div>
-        
+
         <div className="rounded-2xl bg-white p-6 shadow-lg border border-gray-100">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-800">My Bookmarks</h2>
+            <h2 className="text-xl font-bold text-gray-800">{HEADINGS.MY_BOOKMARKS}</h2>
             <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-700">
-              {bookmarks.length} {bookmarks.length === 1 ? 'bookmark' : 'bookmarks'}
+              {bookmarks.length} {bookmarks.length === 1 ? MESSAGES.BOOKMARK_SINGULAR : MESSAGES.BOOKMARK_PLURAL}
             </span>
           </div>
 
@@ -149,8 +150,8 @@ export default function Home() {
                   d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
                 />
               </svg>
-              <p className="text-gray-500 text-lg mb-2">No bookmarks yet</p>
-              <p className="text-gray-400 text-sm">Add your first bookmark to get started!</p>
+              <p className="text-gray-500 text-lg mb-2">{MESSAGES.NO_BOOKMARKS}</p>
+              <p className="text-gray-400 text-sm">{MESSAGES.NO_BOOKMARKS_DESCRIPTION}</p>
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">

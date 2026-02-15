@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { Bookmark } from '@/types/bookmark';
+import {ERROR_MESSAGES, CONFIRMATIONS, BUTTON_LABELS, DATE_FORMAT_OPTIONS, LOCALE, LINK_ATTRIBUTES} from '@/constants';
 
 interface BookmarkCardProps {
     bookmark: Bookmark;
@@ -12,26 +13,20 @@ export default function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) 
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = async () => {
-        if (!confirm('Are you sure you want to delete this bookmark?')) return;
+        if (!confirm(CONFIRMATIONS.DELETE_BOOKMARK)) return;
         setIsDeleting(true);
         try {
             await onDelete(bookmark.id);
         } catch (error) {
-            console.error('Error deleting bookmark:', error);
-            alert('Failed to delete bookmark');
+            console.error(ERROR_MESSAGES.DELETE_BOOKMARK_ERROR, error);
+            alert(ERROR_MESSAGES.DELETE_BOOKMARK_FAILED);
         } finally {
             setIsDeleting(false);
         }
     };
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
-        return new Intl.DateTimeFormat('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        }).format(date);
+        return new Intl.DateTimeFormat(LOCALE.DEFAULT, DATE_FORMAT_OPTIONS).format(date);
     };
 
     return (
@@ -40,8 +35,8 @@ export default function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) 
                 <div className="flex-1 min-w-0">
                     <a
                         href={bookmark.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        target={LINK_ATTRIBUTES.TARGET_BLANK}
+                        rel={LINK_ATTRIBUTES.REL_NOOPENER}
                         className="block"
                     >
                         <h3 className="text-lg font-semibold text-gray-800 mb-2 truncate group-hover:text-indigo-600 transition-colors">
@@ -59,7 +54,7 @@ export default function BookmarkCard({ bookmark, onDelete }: BookmarkCardProps) 
                     onClick={handleDelete}
                     disabled={isDeleting}
                     className="flex-shrink-0 rounded-lg bg-red-50 p-2 text-red-600 transition-all duration-200 hover:bg-red-100 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                    title="Delete bookmark"
+                    title={BUTTON_LABELS.DELETE}
                 >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"

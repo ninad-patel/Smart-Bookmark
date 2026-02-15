@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { APP_NAME, APP_DESCRIPTION, ASSETS } from '@/constants';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,10 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Smart Bookmark",
-  description: "Organize and access your bookmarks anywhere with Smart Bookmark",
+  title: APP_NAME,
+  description: APP_DESCRIPTION,
   icons: {
-    icon: '/bookmark.svg',
+    icon: ASSETS.LOGO,
   },
 };
 

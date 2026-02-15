@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import {APP_NAME, ASSETS, BUTTON_LABELS, ERROR_MESSAGES, IMAGE_SIZES} from '@/constants';
 
 interface HeaderProps {
     userEmail: string;
@@ -16,7 +17,7 @@ export default function Header({ userEmail, onLogout }: HeaderProps) {
         try {
             await onLogout();
         } catch (error) {
-            console.error('Error logging out:', error);
+            console.error(ERROR_MESSAGES.LOGOUT_ERROR, error);
             setIsLoggingOut(false);
         }
     };
@@ -27,14 +28,14 @@ export default function Header({ userEmail, onLogout }: HeaderProps) {
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <Image
-                            src="/bookmark.svg"
-                            alt="Smart Bookmark"
-                            width={32}
-                            height={32}
+                            src={ASSETS.LOGO}
+                            alt={APP_NAME}
+                            width={IMAGE_SIZES.LOGO_SMALL.width}
+                            height={IMAGE_SIZES.LOGO_SMALL.height}
                             className="w-8 h-8"
                         />
                         <h3 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                            Smart Bookmark
+                            {APP_NAME}
                         </h3>
                     </div>
 
@@ -47,7 +48,7 @@ export default function Header({ userEmail, onLogout }: HeaderProps) {
                             disabled={isLoggingOut}
                             className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-red-600 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
-                            {isLoggingOut ? 'Logging out...' : 'Logout'}
+                            {isLoggingOut ? BUTTON_LABELS.LOGGING_OUT : BUTTON_LABELS.LOGOUT}
                         </button>
                     </div>
                 </div>
